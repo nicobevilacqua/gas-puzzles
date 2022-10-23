@@ -2,29 +2,22 @@
 pragma solidity 0.8.15;
 
 contract OptimizedRequire {
-    uint256 constant COOLDOWN = 1 minutes;
-    uint256 constant VALUE = 0.1 ether;
     uint256 lastPurchaseTime;
 
     error CannotPurchase();
 
     function purchaseToken() external payable {
-        unchecked {
-            if (msg.value != VALUE) {
-                revert CannotPurchase();
+        assembly {
+            if or(
+                lt(timestamp(), add(sload(lastPurchaseTime.slot), 60)), // 60 seconds
+                iszero(eq(callvalue(), 100000000000000000)) // 0.1 ether
+            ) {
+                let fmp := mload(0x40)
+                mstore(fmp, shl(232, 8111739)) // custom error selector + 232 zeros
+                revert(fmp, 4)
             }
 
-            // first time
-            if (lastPurchaseTime == 0) {
-                lastPurchaseTime = block.timestamp;
-                return;
-            }
-
-            if (block.timestamp < lastPurchaseTime + COOLDOWN) {
-                revert CannotPurchase();
-            }
-
-            lastPurchaseTime = block.timestamp;
+            sstore(lastPurchaseTime.slot, timestamp())
         }
     }
 }
