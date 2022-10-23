@@ -62,7 +62,7 @@ describe("Distribute", async function () {
     });
 
     describe("Gas target", function () {
-        it("The functions MUST meet the expected gas efficiency", async function () {
+        it.only("The functions MUST meet the expected gas efficiency", async function () {
             await helpers.time.increase(EIGHT_DAYS);
             await helpers.setBalance(
                 instance.address,
